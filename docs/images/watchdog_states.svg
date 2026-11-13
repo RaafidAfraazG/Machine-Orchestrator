@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="350" viewBox="0 0 1200 350" role="img" aria-labelledby="title">
+<title id="title">Per-device watchdog health</title>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker></defs>
+<rect x="2" y="2" width="1196" height="346" rx="20" fill="white" stroke="#e2e8f0"/>
+<g font-family="DejaVu Sans, sans-serif" fill="#0f172a">
+<text x="600.0" y="40" text-anchor="middle" font-size="27" font-weight="bold" fill="#0f172a">Per-device watchdog health</text>
+<rect x="50" y="95" width="210" height="85" rx="14" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+<text x="155.0" y="132.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Healthy</text>
+<text x="155.0" y="158.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Requests succeed</text>
+<rect x="340" y="95" width="210" height="85" rx="14" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+<text x="445.0" y="132.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Suspect</text>
+<text x="445.0" y="158.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Failures counted</text>
+<rect x="630" y="95" width="210" height="85" rx="14" fill="#fff1f2" stroke="#be123c" stroke-width="2"/>
+<text x="735.0" y="132.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Faulted</text>
+<text x="735.0" y="158.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Device isolated</text>
+<rect x="920" y="95" width="230" height="85" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="1035.0" y="132.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Recovering</text>
+<text x="1035.0" y="158.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Reconnect + probe</text>
+<path d="M260,137 L340,137" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M550,137 L630,137" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M840,137 L920,137" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M445,180 L445,220 L155,220 L155,180" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1070,180 L1070,230 L735,230 L735,180" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1035,230 L1035,290 L155,290 L155,220" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="300" y="119" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">failure</text>
+<text x="590" y="119" text-anchor="middle" font-size="15" font-weight="normal" fill="#0f172a">threshold</text>
+<text x="880" y="119" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">backoff</text>
+<text x="300" y="247" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">response succeeds</text>
+<text x="880" y="252" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">probe fails; retry backoff</text>
+<text x="600" y="322" text-anchor="middle" font-size="19" font-weight="normal" fill="#0f172a">probe succeeds → Healthy; allow new workflows</text>
+</g></svg>

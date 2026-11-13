@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="870" viewBox="0 0 1200 870" role="img" aria-labelledby="title">
+<title id="title">MachineOrchestrator architecture</title>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker></defs>
+<rect x="2" y="2" width="1196" height="866" rx="20" fill="white" stroke="#e2e8f0"/>
+<g font-family="DejaVu Sans, sans-serif" fill="#0f172a">
+<text x="600.0" y="40" text-anchor="middle" font-size="27" font-weight="bold" fill="#0f172a">MachineOrchestrator architecture</text>
+<rect x="30" y="175" width="1140" height="550" rx="16" fill="#fafcff" stroke="#cbd5e1"/>
+<text x="50" y="204" text-anchor="start" font-size="18" font-weight="bold" fill="#475569">Engine owns the runtime</text>
+<path d="M80,270 L60,270 L60,695 L990,695 L990,660" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<path d="M430,270 L405,270 L405,695" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<path d="M860,270 L835,270 L835,695" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<path d="M860,460 L835,460" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<path d="M430,460 L405,460" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<path d="M80,460 L60,460" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<path d="M430,615 L405,615" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<text x="150" y="715" text-anchor="start" font-size="15" font-weight="normal" fill="#64748b">All component events feed the log</text>
+<rect x="430" y="75" width="280" height="70" rx="14" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+<text x="570.0" y="105.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Workflows submitted</text>
+<text x="570.0" y="131.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Application / completion futures</text>
+<rect x="80" y="225" width="250" height="90" rx="14" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="205.0" y="253.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Priority scheduler</text>
+<text x="205.0" y="279.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Higher priority first</text>
+<text x="205.0" y="305.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">FIFO ties + aging</text>
+<rect x="430" y="225" width="280" height="90" rx="14" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="570.0" y="265.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Worker pool</text>
+<text x="570.0" y="291.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Async workflow steps</text>
+<rect x="860" y="225" width="260" height="90" rx="14" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+<text x="990.0" y="265.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Resource manager</text>
+<text x="990.0" y="291.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Ordered device locks</text>
+<rect x="80" y="410" width="250" height="100" rx="14" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+<text x="205.0" y="443.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Watchdogs</text>
+<text x="205.0" y="469.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Reactor timers</text>
+<text x="205.0" y="495.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Isolation + recovery</text>
+<rect x="430" y="410" width="280" height="100" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="570.0" y="443.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Reactor thread</text>
+<text x="570.0" y="469.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Level-triggered epoll</text>
+<text x="570.0" y="495.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Owns device I/O</text>
+<rect x="860" y="410" width="260" height="100" rx="14" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+<text x="990.0" y="443.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Deadlock detector</text>
+<text x="990.0" y="469.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Wait-for graph</text>
+<text x="990.0" y="495.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Victim selection</text>
+<rect x="430" y="570" width="280" height="90" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="570.0" y="610.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Devices</text>
+<text x="570.0" y="636.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">TCP / serial transports</text>
+<rect x="860" y="570" width="260" height="90" rx="14" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+<text x="990.0" y="598.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Event log</text>
+<text x="990.0" y="624.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Bounded ring + CSV</text>
+<text x="990.0" y="650.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Dropped-event counter</text>
+<rect x="430" y="770" width="280" height="70" rx="14" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+<text x="570.0" y="800.0" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Simulator</text>
+<text x="570.0" y="826.0" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Asyncio TCP / PTY</text>
+<path d="M430,110 L205,110 L205,225" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M330,270 L430,270" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M710,270 L860,270" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M990,315 L990,410" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M570,315 L570,410" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M430,460 L330,460" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M570,510 L570,570" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M570,660 L570,770" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="785" y="253" text-anchor="middle" font-size="17" font-weight="normal" fill="#0f172a">acquire</text>
+<text x="1060" y="370" text-anchor="middle" font-size="17" font-weight="normal" fill="#0f172a">wait edges</text>
+<text x="620" y="368" text-anchor="middle" font-size="17" font-weight="normal" fill="#0f172a">post()</text>
+<text x="380" y="443" text-anchor="middle" font-size="17" font-weight="normal" fill="#0f172a">timers</text>
+<text x="650" y="746" text-anchor="middle" font-size="17" font-weight="normal" fill="#0f172a">MBAP / RTU-style frames</text>
+</g></svg>

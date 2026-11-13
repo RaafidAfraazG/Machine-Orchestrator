@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img" aria-labelledby="title">
+<title id="title">A workflow step crosses threads without blocking a worker</title>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#475569"/></marker></defs>
+<rect x="2" y="2" width="1196" height="476" rx="20" fill="white" stroke="#e2e8f0"/>
+<g font-family="DejaVu Sans, sans-serif" fill="#0f172a">
+<text x="600.0" y="40" text-anchor="middle" font-size="27" font-weight="bold" fill="#0f172a">A workflow step crosses threads without blocking a worker</text>
+<rect x="30" y="80" width="1140" height="140" rx="16" fill="#fafcff" stroke="#cbd5e1"/>
+<text x="50" y="109" text-anchor="start" font-size="18" font-weight="bold" fill="#475569">Worker pool</text>
+<rect x="30" y="270" width="1140" height="140" rx="16" fill="#fafcff" stroke="#cbd5e1"/>
+<text x="50" y="299" text-anchor="start" font-size="18" font-weight="bold" fill="#475569">Reactor thread</text>
+<rect x="70" y="130" width="260" height="65" rx="14" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="200.0" y="157.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Advance workflow</text>
+<text x="200.0" y="183.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Dispatch next step</text>
+<rect x="450" y="130" width="260" height="65" rx="14" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="580.0" y="157.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Post request</text>
+<text x="580.0" y="183.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Worker returns to queue</text>
+<rect x="860" y="130" width="260" height="65" rx="14" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="990.0" y="157.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Continuation</text>
+<text x="990.0" y="183.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Enqueue at workflow priority</text>
+<rect x="450" y="320" width="260" height="65" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="580.0" y="347.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Device I/O</text>
+<text x="580.0" y="373.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Nonblocking send / receive</text>
+<rect x="860" y="320" width="260" height="65" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="990.0" y="347.5" text-anchor="middle" font-size="21" font-weight="bold" fill="#0f172a">Device callback</text>
+<text x="990.0" y="373.5" text-anchor="middle" font-size="17" font-weight="normal" fill="#334155">Response / timeout / timer</text>
+<path d="M330,162 L450,162" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M580,195 L580,320" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M710,352 L860,352" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M990,320 L990,195" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="630" y="251" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">post()</text>
+<text x="785" y="335" text-anchor="middle" font-size="17" font-weight="normal" fill="#0f172a">complete</text>
+<text x="1070" y="251" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">enqueue()</text>
+<text x="600" y="452" text-anchor="middle" font-size="20" font-weight="normal" fill="#0f766e">No worker waits for device I/O; epoll and timers wake the reactor.</text>
+</g></svg>
