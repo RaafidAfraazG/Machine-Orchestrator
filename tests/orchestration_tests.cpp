@@ -293,6 +293,21 @@ TEST(Workflow, FailureStepValidationAndStop) {
   r = complete(e.submit(conditional));
   EXPECT_EQ(r.reason, WorkflowReason::ConditionFailed);
   EXPECT_EQ(r.failingStep, 0u);
+  for (int i = 0; i < 2; ++i) {
+    Workflow rejected;
+    rejected.needs({0}).then(WriteRegisters{0, 0, {}});
+    EXPECT_EQ(complete(e.submit(rejected)).reason,
+              WorkflowReason::RequestFailed);
+  }
+  EXPECT_EQ(e.health(0), Health::Healthy);
+  Workflow branchFailure;
+  branchFailure.needs({0})
+      .then(ReadRegisters{0, 0, 1, "value"})
+      .then(Conditional{"value", 0, Comparison::Equal, 999, Branch::Continue,
+                        Branch::Fail, 0});
+  auto branchResult = complete(e.submit(branchFailure));
+  EXPECT_EQ(branchResult.reason, WorkflowReason::ConditionFailed);
+  EXPECT_EQ(branchResult.failingStep, 1u);
   Workflow invalid;
   invalid.needs({0}).then(ReadRegisters{1, 0, 1, "x"});
   EXPECT_EQ(complete(e.submit(invalid)).reason,

@@ -368,7 +368,12 @@ void Engine::response(const std::shared_ptr<Run> &r, int id,
                       Result<Response> result, std::string variable) {
   // Protocol exceptions mean a live device rejecting a command, not bad health.
   bool transportOk = std::holds_alternative<Response>(result);
-  watchdogs_.at(id)->observe(transportOk);
+  // Locally rejected requests say nothing about device health.
+  auto error = std::get_if<Error>(&result);
+  if (!error ||
+      (*error != Error::InvalidArgument && *error != Error::UnknownFunction &&
+       *error != Error::Exhausted))
+    watchdogs_.at(id)->observe(transportOk);
   std::lock_guard<std::mutex> lock(mutex_);
   if (r->terminal)
     return;
