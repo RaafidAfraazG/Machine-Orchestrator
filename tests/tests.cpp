@@ -1,4 +1,6 @@
 #include "mo/device.hpp"
+#include "port_lease.hpp"
+#include <algorithm>
 #include <arpa/inet.h>
 #include <future>
 #include <gtest/gtest.h>
@@ -201,7 +203,10 @@ public:
   pid_t pid = -1;
   int output = -1;
   std::string line;
+  std::unique_ptr<mo::test::PortLease> lease;
   explicit Simulator(std::vector<std::string> args) {
+    if (std::find(args.begin(), args.end(), "--serial") == args.end())
+      lease = std::make_unique<mo::test::PortLease>();
     int pipes[2];
     if (pipe(pipes))
       return;
@@ -248,7 +253,7 @@ std::future<Result<Response>> ask(std::shared_ptr<Device> d, Request r,
 }
 TEST(Integration, FortyDevicesAndTimeout) {
   // Reserve a contiguous local range; report a collision as a startup failure.
-  int port = 20000 + (getpid() % 20000);
+  int port = mo::test::PortLease::base;
   Simulator sim({"--tcp-count", "41", "--base-port", std::to_string(port),
                  "--latency-ms", "1", "--jitter-ms", "1", "--fault", "delay",
                  "--fault-device", "40"});
@@ -314,7 +319,7 @@ TEST(Integration, SerialSimulatorAndQueue) {
 }
 TEST(Integration, Faults) {
   for (auto fault : {"drop-connection", "garbage-response"}) {
-    int port = 41000 + (getpid() % 10000);
+    int port = mo::test::PortLease::base;
     Simulator sim({"--base-port", std::to_string(port), "--fault", fault});
     ASSERT_EQ(sim.line, "READY");
     Loop l;
@@ -379,7 +384,7 @@ TEST(Integration, OutOfOrderTransactionMatching) {
   close(sockets[1]);
 }
 TEST(Integration, LateTcpResponseAndSerialTimeout) {
-  int port = 41000 + (getpid() % 10000);
+  int port = mo::test::PortLease::base;
   Simulator sim({"--base-port", std::to_string(port), "--latency-ms", "100"});
   ASSERT_EQ(sim.line, "READY");
   Loop l;

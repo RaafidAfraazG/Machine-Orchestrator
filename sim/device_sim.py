@@ -59,6 +59,7 @@ async def pause(args, index):
 
 
 async def tcp_client(reader, writer, registers, args, index):
+    args.connections[index].add(writer)
     try:
         while True:
             header = await reader.readexactly(7)
@@ -70,17 +71,37 @@ async def tcp_client(reader, writer, registers, args, index):
                 break
             if index in args.silenced:
                 continue  # Deliberately discard replies; reconnects stay silent too.
+            await args.gates[index].wait()
+            fault = dict(args.device_faults[index])
             await pause(args, index)
+            await asyncio.sleep(fault.get('delay', 0) / 1000)
             reply = response(pdu, registers)
+            if 'exception' in fault:
+                reply = bytes((pdu[0] | 0x80, fault['exception']))
+            if fault.get('garbage'):
+                reply = b'\x7f\x00'
+            if fault.get('wrong-tx'):
+                tx ^= 0xffff
+
             if index == args.fault_device and args.fault == 'garbage-response':
                 reply = b'\x7f\x00'
-            writer.write(struct.pack('>HHHB', tx, 0, len(reply)+1, unit) + reply)
+            packet = struct.pack('>HHHB', tx, 0, len(reply)+1, unit) + reply
+            if fault.get('partial'):
+                writer.write(packet[:len(packet)//2])
+                await writer.drain()
+                await reader.read()  # Stall until peer disconnects; no polling.
+                break
+            writer.write(packet)
             await writer.drain()
     except (asyncio.IncompleteReadError, ConnectionError):
         pass
     finally:
+        args.connections[index].discard(writer)
         writer.close()
-        await writer.wait_closed()
+        try:
+            await writer.wait_closed()
+        except ConnectionError:
+            pass
 
 
 async def serial(args):
@@ -146,19 +167,43 @@ async def main(args):
     if args.serial:
         await serial(args)
         return
+    args.gates = [asyncio.Event() for _ in range(args.tcp_count)]
+    for gate in args.gates:
+        gate.set()
     servers = []
     if args.control_port:
         async def control(reader, writer):
             try:
                 line = await reader.readline()
-                action, raw_id = line.decode().strip().split()
+                words = line.decode().strip().split()
+                action, raw_id = words[:2]
                 index = int(raw_id)
-                if not 0 <= index < args.tcp_count or action not in ('silence', 'resume'):
-                    raise ValueError('invalid control command')
+                if not 0 <= index < args.tcp_count:
+                    raise ValueError('invalid device')
                 if action == 'silence':
                     args.silenced.add(index)
-                else:
+                elif action == 'resume':
                     args.silenced.discard(index)
+                    args.gates[index].set()
+                elif action == 'hold':
+                    args.gates[index].clear()
+                elif action in ('delay', 'exception') and len(words) == 3:
+                    value = int(words[2])
+                    if value < 0 or (action == 'exception' and not 1 <= value <= 255):
+                        raise ValueError('invalid value')
+                    args.device_faults[index][action] = value
+                elif action in ('garbage', 'partial', 'wrong-tx'):
+                    args.device_faults[index][action] = True
+                elif action in ('drop', 'reset'):
+                    for connection in tuple(args.connections[index]):
+                        connection.close()
+                    if action == 'reset':
+                        args.gates[index].set()
+                        args.device_faults[index].clear()
+                        args.silenced.discard(index)
+                        args.registers[index][:] = [0] * 1024
+                else:
+                    raise ValueError('invalid control command')
                 writer.write(b'OK\n')
                 await writer.drain()
             except (ValueError, UnicodeError):
@@ -168,7 +213,7 @@ async def main(args):
                 await writer.wait_closed()
         servers.append(await asyncio.start_server(control, '127.0.0.1', args.control_port))
     for index in range(args.tcp_count):
-        registers = [0] * 1024
+        registers = args.registers[index]
         async def client(r, w, registers=registers, index=index):
             await tcp_client(r, w, registers, args, index)
         servers.append(await asyncio.start_server(client, '127.0.0.1', args.base_port + index))
@@ -195,6 +240,9 @@ if __name__ == '__main__':
     try:
         args = parser.parse_args()
         args.silenced = set()
+        args.device_faults = [dict() for _ in range(args.tcp_count)]
+        args.connections = [set() for _ in range(args.tcp_count)]
+        args.registers = [[0] * 1024 for _ in range(args.tcp_count)]
         asyncio.run(main(args))
     except KeyboardInterrupt:
         pass

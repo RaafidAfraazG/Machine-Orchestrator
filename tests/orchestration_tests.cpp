@@ -1,4 +1,5 @@
 #include "mo/engine.hpp"
+#include "port_lease.hpp"
 #include <algorithm>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -156,12 +157,13 @@ TEST(Deadlock, ThreeWorkflowCycleYoungestAndNoFalsePositive) {
 }
 class Simulator {
 public:
+  mo::test::PortLease lease;
   pid_t pid = -1;
   int output = -1;
   std::string line;
   int port, control;
   explicit Simulator(int count)
-      : port(20000 + getpid() % 10000), control(port - 1) {
+      : port(mo::test::PortLease::base), control(port - 1) {
     int pipes[2];
     if (pipe2(pipes, O_CLOEXEC))
       return;

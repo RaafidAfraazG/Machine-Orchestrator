@@ -1,0 +1,18 @@
+[
+ {"name":"unlocked_log","source":"src/event_log.cpp","test":"Regression.ConcurrentLog","label":"unit","tsan":true},
+ {"name":"unlocked_queue","source":"src/scheduler.cpp","test":"Regression.ConcurrentQueue","label":"unit","tsan":true},
+ {"name":"lock_order","source":"src/resource_manager.cpp","test":"Resources.OrderedContentionViolationAndIdempotentRelease","label":"unit"},
+ {"name":"missing_abort_release","source":"src/engine.cpp","test":"FaultScenarios.AbortInFlight","label":"fault"},
+ {"name":"lost_wakeup","source":"src/resource_manager.cpp","test":"Resources.OrderedContentionViolationAndIdempotentRelease","label":"unit"},
+ {"name":"wrong_priority","source":"src/scheduler.cpp","test":"Scheduler.PriorityAndFifo","label":"unit"},
+ {"name":"aging_disabled","source":"src/scheduler.cpp","test":"Scheduler.AgingBeatsNewHighPriorityWork","label":"unit"},
+ {"name":"missing_cycle_edge","source":"src/deadlock_detector.cpp","test":"Deadlock.TwoWorkflowCycleAndLowestPriority","label":"unit"},
+ {"name":"watchdog_disabled","source":"src/watchdog.cpp","test":"Watchdog.IsolationOtherDevicesAndRecovery","label":"integration"},
+ {"name":"timeout_off_by_one","source":"src/device.cpp","test":"Regression.TimeoutTargetsRequest","label":"unit"},
+ {"name":"transaction_mismatch","source":"src/device.cpp","test":"FaultScenarios.WrongTransactionId","label":"fault"},
+ {"name":"crc_skipped","source":"src/protocol.cpp","test":"Codec.StreamingAndErrors","label":"unit"},
+ {"name":"double_release","source":"src/resource_manager.cpp","test":"Regression.RepeatedReleasePreservesNewOwner","label":"unit"},
+ {"name":"callback_after_complete","source":"src/device.cpp","test":"Regression.CallbackExactlyOnce","label":"unit"},
+ {"name":"missing_release_event","source":"src/resource_manager.cpp","test":"Regression.ReleaseExactlyOnce","label":"unit"},
+ {"name":"drop_counter","source":"src/event_log.cpp","test":"Regression.DroppedEventCount","label":"unit"}
+]
