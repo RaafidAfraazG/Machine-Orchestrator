@@ -35,7 +35,11 @@ target_link_libraries(mo_demo PRIVATE mo)
 include(CTest)
 if(BUILD_TESTING)
   include(FetchContent)
-  FetchContent_Declare(googletest URL https://codeload.github.com/google/googletest/tar.gz/refs/tags/v1.15.2)
+  FetchContent_Declare(googletest
+    URL https://codeload.github.com/google/googletest/tar.gz/refs/tags/v1.15.2
+    URL_HASH SHA256=7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926)
+  set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+  set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   add_executable(mo_tests tests/tests.cpp)
