@@ -23,6 +23,30 @@ void Device::stop() {
   auto self = shared_from_this();
   reactor_.post([self] { self->fail(Error::Closed); });
 }
+void Device::isolate() {
+  auto self = shared_from_this();
+  reactor_.post([self] {
+    self->isolated_ = true;
+    self->fail(Error::DeviceFaulted);
+  });
+}
+void Device::reconnect() {
+  auto self = shared_from_this();
+  reactor_.post([self] {
+    self->fail(Error::Closed);
+    self->decoder_ = StreamDecoder(self->transport_->framing());
+    self->isolated_ = false;
+    self->started_ = false;
+    self->state_ = DeviceState::Connecting;
+    self->begin();
+  });
+}
+void Device::setObserver(Observer observer) {
+  auto self = shared_from_this();
+  reactor_.post([self, observer = std::move(observer)]() mutable {
+    self->observer_ = std::move(observer);
+  });
+}
 void Device::begin() {
   if (started_)
     return;
@@ -50,20 +74,20 @@ void Device::begin() {
                        }}))
     fail(Error::Io);
 }
-void Device::request(Request r, Callback cb,
-                     std::chrono::milliseconds timeout) {
+void Device::request(Request r, Callback cb, std::chrono::milliseconds timeout,
+                     CommandContext context) {
   auto self = shared_from_this();
   reactor_.post(
-      [self, r = std::move(r), cb = std::move(cb), timeout]() mutable {
-        self->enqueue(std::move(r), std::move(cb), timeout);
+      [self, r = std::move(r), cb = std::move(cb), timeout, context]() mutable {
+        self->enqueue(std::move(r), std::move(cb), timeout, context);
       });
 }
-void Device::enqueue(Request r, Callback cb,
-                     std::chrono::milliseconds timeout) {
+void Device::enqueue(Request r, Callback cb, std::chrono::milliseconds timeout,
+                     CommandContext context) {
   if (!started_)
     begin();
   if (state_ == DeviceState::Faulted) {
-    cb(Error::Closed);
+    cb(isolated_ ? Error::DeviceFaulted : Error::Closed);
     return;
   }
   if (pending_.size() >= 65536) {
@@ -95,7 +119,9 @@ void Device::enqueue(Request r, Callback cb,
       }
     }
   });
-  pending_.emplace(id, Pending{std::move(r), std::move(cb), timer});
+  if (observer_)
+    observer_("command_submitted", id, context);
+  pending_.emplace(id, Pending{std::move(r), std::move(cb), timer, context});
   if (transport_->framing() == Framing::Rtu)
     serial_.push_back(id);
   output_.push_back(Output{id, std::get<Bytes>(std::move(encoded)), 0});
@@ -135,8 +161,11 @@ void Device::flush() {
       return;
     }
     o.offset += n;
-    if (o.offset == o.bytes.size())
+    if (o.offset == o.bytes.size()) {
+      if (observer_)
+        observer_("command_sent", o.id, pending_.at(o.id).context);
       output_.pop_front();
+    }
   }
   bool writable = !output_.empty();
   if (transport_->framing() == Framing::Rtu && writable &&
@@ -189,6 +218,12 @@ void Device::complete(uint16_t id, Result<Response> r) {
   auto i = pending_.find(id);
   if (i == pending_.end())
     return;
+  if (observer_)
+    observer_(std::holds_alternative<Error>(r) &&
+                      std::get<Error>(r) == Error::Timeout
+                  ? "command_timeout"
+                  : "response_received",
+              id, i->second.context);
   auto cb = std::move(i->second.callback);
   reactor_.cancel(i->second.timer);
   pending_.erase(i);
@@ -206,6 +241,9 @@ void Device::fail(Error e) {
   pending_.clear();
   for (auto &p : pending) {
     reactor_.cancel(p.second.timer);
+    if (observer_)
+      observer_(e == Error::Timeout ? "command_timeout" : "command_failed",
+                p.first, p.second.context);
     p.second.callback(e);
   }
 }

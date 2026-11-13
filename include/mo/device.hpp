@@ -5,6 +5,9 @@
 #include <memory>
 namespace mo {
 enum class DeviceState { Connecting, Ready, Faulted };
+struct CommandContext {
+  uint64_t workflow = 0, command = 0;
+};
 class Device : public std::enable_shared_from_this<Device> {
 public:
   using Callback = std::function<void(Result<Response>)>;
@@ -16,9 +19,17 @@ public:
   void start();
   // Terminal shutdown: pending callbacks receive Closed; no automatic recovery.
   void stop();
+  // Thread-safe; Engine invokes these from the reactor. Isolation fails queued
+  // and in-flight operations. Reconnect resets framing and reopens the
+  // transport.
+  void isolate();
+  void reconnect();
+  using Observer = std::function<void(const char *, uint16_t, CommandContext)>;
+  void setObserver(Observer observer);
   void
   request(Request, Callback,
-          std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
+          std::chrono::milliseconds timeout = std::chrono::milliseconds(1000),
+          CommandContext context = {});
   DeviceState state() const { return state_.load(); }
 
 private:
@@ -26,6 +37,7 @@ private:
     Request request;
     Callback callback;
     uint64_t timer;
+    CommandContext context;
   };
   struct Output {
     uint16_t id;
@@ -33,7 +45,7 @@ private:
     size_t offset = 0;
   };
   void begin();
-  void enqueue(Request, Callback, std::chrono::milliseconds);
+  void enqueue(Request, Callback, std::chrono::milliseconds, CommandContext);
   void readable();
   void writable();
   void flush();
@@ -44,6 +56,8 @@ private:
   StreamDecoder decoder_;
   std::atomic<DeviceState> state_{DeviceState::Connecting};
   bool started_ = false;
+  bool isolated_ = false;
+  Observer observer_;
   std::deque<uint16_t> serial_;
   std::map<uint16_t, Pending> pending_;
   std::deque<Output> output_;

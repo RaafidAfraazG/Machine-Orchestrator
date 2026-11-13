@@ -14,7 +14,8 @@ enum class Error {
   Io,
   Closed,
   Timeout,
-  Exhausted
+  Exhausted,
+  DeviceFaulted
 };
 template <class T> using Result = std::variant<T, Error>;
 enum class Framing { Tcp, Rtu };
