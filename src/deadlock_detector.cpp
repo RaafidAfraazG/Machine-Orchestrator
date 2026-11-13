@@ -1,4 +1,5 @@
 #include "mo/deadlock_detector.hpp"
+#include "mo/bug_injection.hpp"
 #include "mo/event_log.hpp"
 #include <algorithm>
 #include <sstream>
@@ -31,7 +32,8 @@ Deadlock DeadlockDetector::block(WorkflowId waiter, WorkflowId owner,
   std::lock_guard<std::mutex> l(mutex_);
   info_.try_emplace(waiter);
   info_.try_emplace(owner);
-  edges_[waiter] = {owner, resource};
+  if (!MO_BUG("missing_cycle_edge"))
+    edges_[waiter] = {owner, resource};
   std::vector<WorkflowId> path;
   std::map<WorkflowId, size_t> seen;
   auto id = waiter;

@@ -1,4 +1,5 @@
 #include "mo/watchdog.hpp"
+#include "mo/bug_injection.hpp"
 #include <algorithm>
 namespace mo {
 Watchdog::Watchdog(Reactor &r, WatchdogConfig c, Transition t, ReconnectProbe p)
@@ -25,6 +26,8 @@ void Watchdog::observe(bool success) {
     transition(Health::Healthy);
     return;
   }
+  if (MO_BUG("watchdog_disabled"))
+    return;
   ++failures_;
   transition(Health::Suspect);
   if (failures_ >= config_.failureThreshold) {

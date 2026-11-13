@@ -19,6 +19,7 @@ public:
     size_t workers = 4;
     std::chrono::milliseconds agingInterval{50};
     RealtimeConfig realtime;
+    std::function<void(bool)> realtimeObserver;
   };
   using Clock = std::function<std::chrono::steady_clock::time_point()>;
   Scheduler();

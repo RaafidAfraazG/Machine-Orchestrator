@@ -20,6 +20,8 @@ struct EngineConfig {
   LockMode locking = LockMode::Ordered;
   std::chrono::milliseconds requestTimeout{500};
   size_t eventCapacity = 65536;
+  std::function<std::unique_ptr<Transport>(int, const Endpoint &)>
+      transportFactory;
 };
 struct EngineStats {
   size_t completed = 0, failed = 0, aborted = 0, deadlocksResolved = 0,

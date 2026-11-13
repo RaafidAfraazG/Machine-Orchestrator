@@ -1,5 +1,6 @@
 #pragma once
 #include "mo/protocol.hpp"
+#include <chrono>
 #include <string>
 #include <sys/types.h>
 namespace mo {
@@ -15,6 +16,10 @@ public:
   virtual Result<size_t> recv(uint8_t *, size_t) = 0;
   virtual int error() const = 0;
   virtual Framing framing() const = 0;
+  // Fault decorators may request timer-backed I/O suspension after would-block.
+  virtual std::chrono::milliseconds retryAfter() const {
+    return std::chrono::milliseconds(0);
+  }
 };
 class FdTransport : public Transport {
 public:

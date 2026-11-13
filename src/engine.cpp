@@ -1,4 +1,5 @@
 #include "mo/engine.hpp"
+#include "mo/bug_injection.hpp"
 #include <algorithm>
 #include <set>
 #include <sstream>
@@ -55,7 +56,13 @@ bool compare(uint16_t a, Comparison op, uint16_t b) {
 } // namespace
 Engine::Engine() : Engine(EngineConfig{}) {}
 Engine::Engine(EngineConfig c, std::unique_ptr<VictimPolicy> policy)
-    : config_(c), log_(c.eventCapacity), scheduler_(c.scheduler),
+    : config_(c), log_(c.eventCapacity), scheduler_([this, c] {
+        auto config = c.scheduler;
+        config.realtimeObserver = [this](bool ok) {
+          log_.record("realtime_worker", 0, -1, 0, ok ? "granted" : "fallback");
+        };
+        return config;
+      }()),
       detector_(&log_, std::move(policy)), resources_(c.locking, &log_) {
   resources_.attachDetector(&detector_);
 }
@@ -65,10 +72,14 @@ bool Engine::addDevice(int id, Endpoint endpoint) {
   if (started_ || finished_ || id < 0 || devices_.count(id))
     return false;
   std::unique_ptr<Transport> t;
-  if (endpoint.serialPath.empty())
+  if (config_.transportFactory)
+    t = config_.transportFactory(id, endpoint);
+  else if (endpoint.serialPath.empty())
     t = std::make_unique<TcpTransport>(endpoint.host, endpoint.port);
   else
     t = std::make_unique<SerialTransport>(endpoint.serialPath, endpoint.baud);
+  if (!t)
+    return false;
   devices_[id] = std::make_shared<Device>(reactor_, std::move(t));
   health_[id] = Health::Healthy;
   return true;
@@ -85,7 +96,11 @@ bool Engine::start() {
   scheduler_.start();
   reactor_.start();
   reactor_.post([this] {
-    applyRealtime(config_.scheduler.realtime);
+    auto realtime = applyRealtime(config_.scheduler.realtime);
+    log_.record("realtime_reactor", 0, -1, 0,
+                !config_.scheduler.realtime.enabled ? "off"
+                : realtime                          ? "granted"
+                                                    : "fallback");
     for (auto &entry : devices_) {
       int id = entry.first;
       auto d = entry.second;
@@ -211,7 +226,8 @@ void Engine::finish(const std::shared_ptr<Run> &r, WorkflowState s,
     reactor_.post([this, timer] { reactor_.cancel(timer); });
     r->delayTimer = 0;
   }
-  resources_.release(r->workflow.id);
+  if (!(MO_BUG("missing_abort_release") && s == WorkflowState::Aborted))
+    resources_.release(r->workflow.id);
   if (s == WorkflowState::Completed)
     ++stats_.completed;
   else if (s == WorkflowState::Aborted)

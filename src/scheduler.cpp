@@ -1,4 +1,5 @@
 #include "mo/scheduler.hpp"
+#include "mo/bug_injection.hpp"
 #include <algorithm>
 #include <iostream>
 #include <pthread.h>
@@ -47,7 +48,9 @@ void Scheduler::stop() {
 }
 bool Scheduler::enqueue(int priority, std::function<void()> t) {
   {
-    std::lock_guard<std::mutex> l(mutex_);
+    std::unique_lock<std::mutex> l(mutex_, std::defer_lock);
+    if (!MO_BUG("unlocked_queue"))
+      l.lock();
     if (stopping_)
       return false;
     tasks_.push_back({priority, sequence_++, clock_(), std::move(t)});
@@ -60,7 +63,9 @@ size_t Scheduler::queued() const {
   return tasks_.size();
 }
 void Scheduler::worker() {
-  applyRealtime(config_.realtime);
+  auto realtime = applyRealtime(config_.realtime);
+  if (config_.realtime.enabled && config_.realtimeObserver)
+    config_.realtimeObserver(realtime);
   for (;;) {
     std::function<void()> work;
     {
@@ -71,7 +76,7 @@ void Scheduler::worker() {
       auto now = clock_();
       auto score = [&](const Task &t) {
         int64_t age = 0;
-        if (config_.agingInterval.count() > 0)
+        if (!MO_BUG("aging_disabled") && config_.agingInterval.count() > 0)
           age = std::chrono::duration_cast<std::chrono::milliseconds>(now -
                                                                       t.since)
                     .count() /
@@ -80,7 +85,8 @@ void Scheduler::worker() {
       };
       auto best = tasks_.begin();
       for (auto i = std::next(tasks_.begin()); i != tasks_.end(); ++i)
-        if (score(*i) > score(*best) ||
+        if ((MO_BUG("wrong_priority") ? score(*i) < score(*best)
+                                      : score(*i) > score(*best)) ||
             (score(*i) == score(*best) && i->sequence < best->sequence))
           best = i;
       work = std::move(best->run);

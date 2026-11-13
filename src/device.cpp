@@ -1,12 +1,15 @@
 #include "mo/device.hpp"
+#include "mo/bug_injection.hpp"
 namespace mo {
 Device::Device(Reactor &r, std::unique_ptr<Transport> t)
     : reactor_(r), transport_(std::move(t)), decoder_(transport_->framing()) {}
 Device::~Device() {
   // Defer descriptor deregistration and closure to its owner thread.
   auto t = std::shared_ptr<Transport>(std::move(transport_));
+  auto timer = ioTimer_;
   auto *loop = &reactor_;
-  reactor_.post([loop, t, pending = std::move(pending_)]() mutable {
+  reactor_.post([loop, t, timer, pending = std::move(pending_)]() mutable {
+    loop->cancel(timer);
     loop->unwatch(t->fd());
     t->close();
     for (auto &entry : pending) {
@@ -58,21 +61,25 @@ void Device::begin() {
   }
   if (std::get<bool>(r))
     state_ = DeviceState::Ready;
-  std::weak_ptr<Device> w = shared_from_this();
-  if (!reactor_.watch(transport_->fd(), state_ == DeviceState::Connecting,
-                      {[w] {
-                         if (auto s = w.lock())
-                           s->readable();
-                       },
-                       [w] {
-                         if (auto s = w.lock())
-                           s->writable();
-                       },
-                       [w] {
-                         if (auto s = w.lock())
-                           s->fail(Error::Io);
-                       }}))
+  if (!watch())
     fail(Error::Io);
+}
+bool Device::watch() {
+  std::weak_ptr<Device> w = shared_from_this();
+  return reactor_.watch(transport_->fd(),
+                        state_ == DeviceState::Connecting || !output_.empty(),
+                        {[w] {
+                           if (auto s = w.lock())
+                             s->readable();
+                         },
+                         [w] {
+                           if (auto s = w.lock())
+                             s->writable();
+                         },
+                         [w] {
+                           if (auto s = w.lock())
+                             s->fail(Error::Io);
+                         }});
 }
 void Device::request(Request r, Callback cb, std::chrono::milliseconds timeout,
                      CommandContext context) {
@@ -115,7 +122,9 @@ void Device::enqueue(Request r, Callback cb, std::chrono::milliseconds timeout,
         if (queued)
           s->fail(Error::Timeout);
         else
-          s->complete(id, Error::Timeout);
+          s->complete(
+              MO_BUG("timeout_off_by_one") ? static_cast<uint16_t>(id + 1) : id,
+              Error::Timeout);
       }
     }
   });
@@ -138,8 +147,30 @@ void Device::writable() {
   }
   flush();
 }
+void Device::suspendIo() {
+  auto delay = transport_->retryAfter();
+  if (delay.count() <= 0)
+    return;
+  reactor_.unwatch(transport_->fd());
+  reactor_.cancel(ioTimer_);
+  auto weak = weak_from_this();
+  ioTimer_ = reactor_.after(delay, [weak] {
+    if (auto self = weak.lock()) {
+      self->ioTimer_ = 0;
+      if (self->state_ == DeviceState::Faulted)
+        return;
+      if (!self->watch()) {
+        self->fail(Error::Io);
+        return;
+      }
+      self->writable();
+      if (self->state_ == DeviceState::Ready)
+        self->readable();
+    }
+  });
+}
 void Device::flush() {
-  if (state_ != DeviceState::Ready)
+  if (state_ != DeviceState::Ready || ioTimer_)
     return;
   while (!output_.empty()) {
     // Only send the first serial request until its response arrives.
@@ -150,8 +181,12 @@ void Device::flush() {
     auto r =
         transport_->send(o.bytes.data() + o.offset, o.bytes.size() - o.offset);
     if (auto e = std::get_if<Error>(&r)) {
-      if (*e == Error::Incomplete)
+      if (*e == Error::Incomplete) {
+        suspendIo();
+        if (ioTimer_)
+          return;
         break;
+      }
       fail(*e);
       return;
     }
@@ -181,6 +216,8 @@ void Device::readable() {
     if (auto e = std::get_if<Error>(&r)) {
       if (*e != Error::Incomplete)
         fail(*e);
+      else
+        suspendIo();
       return;
     }
     Bytes b(buf, buf + std::get<size_t>(r));
@@ -190,10 +227,15 @@ void Device::readable() {
         return;
       }
       auto response = std::get<Response>(decoded);
-      if (pending_.empty())
+      if (pending_.empty()) {
+        if (observer_)
+          observer_("unmatched_response", response.transaction, {});
         continue;
+      }
       auto id = transport_->framing() == Framing::Tcp ? response.transaction
                                                       : serial_.front();
+      if (MO_BUG("transaction_mismatch") && !pending_.empty())
+        id = pending_.begin()->first;
       auto i = pending_.find(id);
       if (i == pending_.end())
         continue;
@@ -229,9 +271,13 @@ void Device::complete(uint16_t id, Result<Response> r) {
   pending_.erase(i);
   if (transport_->framing() == Framing::Rtu && !serial_.empty())
     serial_.pop_front();
+  if (MO_BUG("callback_after_complete"))
+    cb(r);
   cb(std::move(r));
 }
 void Device::fail(Error e) {
+  reactor_.cancel(ioTimer_);
+  ioTimer_ = 0;
   state_ = DeviceState::Faulted;
   reactor_.unwatch(transport_->fd());
   transport_->close();

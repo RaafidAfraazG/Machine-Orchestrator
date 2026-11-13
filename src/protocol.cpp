@@ -1,4 +1,5 @@
 #include "mo/protocol.hpp"
+#include "mo/bug_injection.hpp"
 #include <algorithm>
 namespace mo {
 namespace {
@@ -105,7 +106,8 @@ Result<Response> decodeResponse(const Bytes &b, Framing f) {
   } else {
     end = b.size() - 2;
     Bytes body(b.begin(), b.end() - 2);
-    if (crc16(body) != static_cast<uint16_t>(b[end] | (b[end + 1] << 8)))
+    if (!MO_BUG("crc_skipped") &&
+        crc16(body) != static_cast<uint16_t>(b[end] | (b[end + 1] << 8)))
       return Error::BadCrc;
   }
   Response r;

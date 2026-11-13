@@ -45,6 +45,8 @@ private:
     size_t offset = 0;
   };
   void begin();
+  bool watch();
+  void suspendIo();
   void enqueue(Request, Callback, std::chrono::milliseconds, CommandContext);
   void readable();
   void writable();
@@ -62,5 +64,6 @@ private:
   std::map<uint16_t, Pending> pending_;
   std::deque<Output> output_;
   uint16_t next_ = 0;
+  uint64_t ioTimer_ = 0;
 };
 } // namespace mo

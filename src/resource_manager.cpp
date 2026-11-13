@@ -1,4 +1,5 @@
 #include "mo/resource_manager.hpp"
+#include "mo/bug_injection.hpp"
 #include "mo/deadlock_detector.hpp"
 #include "mo/event_log.hpp"
 #include <algorithm>
@@ -18,7 +19,7 @@ AcquireResult ResourceManager::acquire(WorkflowId id,
   if (mode_ == LockMode::Ordered)
     std::sort(wanted.begin(), wanted.end());
   auto &own = held_[id];
-  if (mode_ == LockMode::Ordered)
+  if (!MO_BUG("lock_order") && mode_ == LockMode::Ordered)
     for (int device : wanted)
       if (!own.count(device) && !own.empty() && device < *own.rbegin()) {
         if (log_)
@@ -58,10 +59,12 @@ void ResourceManager::release(WorkflowId id) {
     if (detector_)
       detector_->remove(id);
     auto h = held_.find(id);
+    if (MO_BUG("double_release") && h == held_.end())
+      owners_.clear();
     if (h != held_.end()) {
       for (int device : h->second) {
         owners_.erase(device);
-        if (log_)
+        if (log_ && !MO_BUG("missing_release_event"))
           log_->record("lock_release", id, device);
       }
       held_.erase(h);
@@ -77,7 +80,7 @@ void ResourceManager::release(WorkflowId id) {
     }
   }
   for (auto &wake : wakes)
-    if (wake)
+    if (wake && !MO_BUG("lost_wakeup"))
       wake();
 }
 bool ResourceManager::allFree() const {
