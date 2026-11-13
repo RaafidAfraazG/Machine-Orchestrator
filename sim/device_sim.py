@@ -68,6 +68,8 @@ async def tcp_client(reader, writer, registers, args, index):
             pdu = await reader.readexactly(length - 1)
             if index == args.fault_device and args.fault == 'drop-connection':
                 break
+            if index in args.silenced:
+                continue  # Deliberately discard replies; reconnects stay silent too.
             await pause(args, index)
             reply = response(pdu, registers)
             if index == args.fault_device and args.fault == 'garbage-response':
@@ -145,6 +147,26 @@ async def main(args):
         await serial(args)
         return
     servers = []
+    if args.control_port:
+        async def control(reader, writer):
+            try:
+                line = await reader.readline()
+                action, raw_id = line.decode().strip().split()
+                index = int(raw_id)
+                if not 0 <= index < args.tcp_count or action not in ('silence', 'resume'):
+                    raise ValueError('invalid control command')
+                if action == 'silence':
+                    args.silenced.add(index)
+                else:
+                    args.silenced.discard(index)
+                writer.write(b'OK\n')
+                await writer.drain()
+            except (ValueError, UnicodeError):
+                writer.write(b'ERROR\n')
+            finally:
+                writer.close()
+                await writer.wait_closed()
+        servers.append(await asyncio.start_server(control, '127.0.0.1', args.control_port))
     for index in range(args.tcp_count):
         registers = [0] * 1024
         async def client(r, w, registers=registers, index=index):
@@ -166,10 +188,13 @@ if __name__ == '__main__':
     parser.add_argument('--latency-ms', type=float, default=0)
     parser.add_argument('--jitter-ms', type=float, default=0)
     parser.add_argument('--serial', action='store_true')
+    parser.add_argument('--control-port', type=int, default=0, help='optional loopback admin: silence ID / resume ID')
     parser.add_argument('--fault', choices=['drop-connection', 'delay', 'garbage-response'])
     parser.add_argument('--fault-device', type=int, default=0)
     parser.add_argument('--fault-delay-ms', type=float, default=5000)
     try:
-        asyncio.run(main(parser.parse_args()))
+        args = parser.parse_args()
+        args.silenced = set()
+        asyncio.run(main(args))
     except KeyboardInterrupt:
         pass
