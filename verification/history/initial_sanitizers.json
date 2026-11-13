@@ -1,0 +1,40 @@
+{
+  "timestamp_utc": "2026-11-13T20:23:43.446069+00:00",
+  "results": [
+    {
+      "mode": "normal",
+      "configure": 0,
+      "build": 0,
+      "passed": true,
+      "tests": 81,
+      "scenarios": 50,
+      "exit_code": 0,
+      "seconds": 10.83149886000001,
+      "failures": []
+    },
+    {
+      "mode": "asan-ubsan",
+      "configure": 0,
+      "build": 0,
+      "passed": true,
+      "tests": 81,
+      "scenarios": 50,
+      "exit_code": 0,
+      "seconds": 13.223566138000024,
+      "failures": []
+    },
+    {
+      "mode": "tsan",
+      "configure": 0,
+      "build": 0,
+      "passed": false,
+      "tests": 81,
+      "scenarios": 50,
+      "exit_code": 8,
+      "seconds": 12.357480730000134,
+      "failures": [
+        "Integration.FortyDevicesAndTimeout"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "timestamp_utc": "2026-11-13T20:34:29.372968+00:00",
+  "results": [
+    {
+      "mode": "normal",
+      "configure": 0,
+      "build": 0,
+      "passed": true,
+      "tests": 81,
+      "scenarios": 50,
+      "exit_code": 0,
+      "seconds": 10.615009111999825,
+      "failures": []
+    },
+    {
+      "mode": "asan-ubsan",
+      "configure": 0,
+      "build": 0,
+      "passed": true,
+      "tests": 81,
+      "scenarios": 50,
+      "exit_code": 0,
+      "seconds": 12.958449180000116,
+      "failures": []
+    },
+    {
+      "mode": "tsan",
+      "configure": 0,
+      "build": 0,
+      "passed": true,
+      "tests": 81,
+      "scenarios": 50,
+      "exit_code": 0,
+      "seconds": 12.44089854899994,
+      "failures": [],
+      "repeat": 10,
+      "repeat_selected": 60,
+      "repeat_exit_code": 0,
+      "repeat_seconds": 127.13074290900022,
+      "repeat_failures": []
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "production_bugs": [],
+  "test_infrastructure_fixes": [
+    "Wait for a specific acquisition before submitting contending long workflows; worker dispatch order does not imply mutex acquisition order.",
+    "Serialize simulator fixtures across test processes with a port lease below Linux's ephemeral range; an initial TSan run hit a port collision, not a sanitizer report."
+  ],
+  "permitted_hooks": [
+    "Engine transport factory and Transport retryAfter for timer-backed artificial stalls",
+    "Bounded EventLog dropped counter and optional full-stream audit sink",
+    "Actual realtime-policy outcome events and unmatched-response observation",
+    "Compile-time deliberate bug mutations, disabled in ordinary builds"
+  ]
+}

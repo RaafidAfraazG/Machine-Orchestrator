@@ -1,0 +1,167 @@
+{
+  "timestamp_utc": "2026-11-13T20:33:28.026892+00:00",
+  "injected": 16,
+  "caught": 16,
+  "results": [
+    {
+      "name": "unlocked_log",
+      "mode": "tsan",
+      "status": "caught",
+      "failed_tests": [
+        "Regression.ConcurrentLog"
+      ],
+      "exit_code": 8,
+      "seconds": 0.0451114850002341
+    },
+    {
+      "name": "unlocked_queue",
+      "mode": "tsan",
+      "status": "caught",
+      "failed_tests": [
+        "Regression.ConcurrentQueue"
+      ],
+      "exit_code": 8,
+      "seconds": 0.04647096300004705
+    },
+    {
+      "name": "lock_order",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Resources.OrderedContentionViolationAndIdempotentRelease"
+      ],
+      "exit_code": 8,
+      "seconds": 0.009343745000023773
+    },
+    {
+      "name": "missing_abort_release",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "FaultScenarios.AbortInFlight"
+      ],
+      "exit_code": 8,
+      "seconds": 0.06463600500001121
+    },
+    {
+      "name": "lost_wakeup",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Resources.OrderedContentionViolationAndIdempotentRelease"
+      ],
+      "exit_code": 8,
+      "seconds": 0.009549230999709835
+    },
+    {
+      "name": "wrong_priority",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Scheduler.PriorityAndFifo"
+      ],
+      "exit_code": 8,
+      "seconds": 0.010688095999739744
+    },
+    {
+      "name": "aging_disabled",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Scheduler.AgingBeatsNewHighPriorityWork"
+      ],
+      "exit_code": 8,
+      "seconds": 10.010088781000377
+    },
+    {
+      "name": "missing_cycle_edge",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Deadlock.TwoWorkflowCycleAndLowestPriority"
+      ],
+      "exit_code": 8,
+      "seconds": 0.007670936000067741
+    },
+    {
+      "name": "watchdog_disabled",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Watchdog.IsolationOtherDevicesAndRecovery"
+      ],
+      "exit_code": 8,
+      "seconds": 10.318037941000057
+    },
+    {
+      "name": "timeout_off_by_one",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Regression.TimeoutTargetsRequest"
+      ],
+      "exit_code": 8,
+      "seconds": 2.1434386939999968
+    },
+    {
+      "name": "transaction_mismatch",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "FaultScenarios.WrongTransactionId"
+      ],
+      "exit_code": 8,
+      "seconds": 0.15795438499981174
+    },
+    {
+      "name": "crc_skipped",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Codec.StreamingAndErrors"
+      ],
+      "exit_code": 8,
+      "seconds": 0.008670468000218534
+    },
+    {
+      "name": "double_release",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Regression.RepeatedReleasePreservesNewOwner"
+      ],
+      "exit_code": 8,
+      "seconds": 0.007489650000024994
+    },
+    {
+      "name": "callback_after_complete",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Regression.CallbackExactlyOnce"
+      ],
+      "exit_code": 8,
+      "seconds": 0.15654186000028858
+    },
+    {
+      "name": "missing_release_event",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Regression.ReleaseExactlyOnce"
+      ],
+      "exit_code": 8,
+      "seconds": 0.007900629000232584
+    },
+    {
+      "name": "drop_counter",
+      "mode": "normal",
+      "status": "caught",
+      "failed_tests": [
+        "Regression.DroppedEventCount"
+      ],
+      "exit_code": 8,
+      "seconds": 0.009044702000210236
+    }
+  ]
+}
