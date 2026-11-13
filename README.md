@@ -14,6 +14,33 @@ Phase 2 can submit requests through `Device::request` and marshal work through
 `Reactor::post`; scheduling and recovery policy belong above these interfaces.
 No workflows, priorities, deadlock detection or watchdogs are included.
 
+# Phase 2 DESIGN
+
+`Engine` owns the reactor, devices, priority `Scheduler`, `ResourceManager`,
+`DeadlockDetector`, per-device `Watchdog`s and bounded `EventLog`. Worker tasks
+advance workflow steps without waiting for I/O. Device access and watchdog timers
+run only on the reactor; responses enqueue priority continuations. Delay steps
+use reactor timers. External callers may add devices before start, submit from
+any thread, and stop from an external owner thread. Stop aborts outstanding work,
+cancels timers and requests, drains workers and joins the reactor.
+
+Lock hierarchy (outer to inner): Engine coordination mutex -> ResourceManager
+mutex -> DeadlockDetector mutex -> EventLog mutex. Scheduler queue locking never
+calls user work while held; resource wake callbacks only enqueue work and run
+outside the resource mutex. The detector is the bottom *coordination* lock;
+logging is a leaf sink and never calls back. Watchdog state is reactor-confined;
+health publication uses the Engine mutex. No worker holds a mutex across I/O or
+waits for a device response. Workflow snapshots/results are copied at completion.
+
+ORDERED acquires declared devices in ascending ID order and parks on contention.
+UNCHECKED and explicit Acquire steps/manual locking exist only for detector tests
+and the deadlock demo, never production workflows. The detector returns a cycle
+and strategy-selected victim; Engine atomically aborts it and releases its locks.
+Watchdogs isolate faulted devices, terminate dependent workflows in fail-fast
+mode, then reconnect and probe with capped exponential backoff. Device command
+observers provide submitted/sent/response/timeout timestamps without changing the
+Phase 1 protocol or transport interfaces.
+
 # Build and test
 
 ```sh
